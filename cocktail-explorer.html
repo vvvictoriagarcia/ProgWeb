@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cocktail Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background-color: #fdcc8c;
+      color: #5d4037;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2, h3, h4 {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      padding: 20px;
+    }
+
+    .card {
+      display: inline-block;
+      width: 220px;
+      text-align: center;
+      background: #fff3e0;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,.15);
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: #e67e22;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      margin: 10px;
+      cursor: pointer;
+    }
+
+    input {
+      padding: 10px;
+      width: 300px;
+      border: 2px solid #f39c12;
+      border-radius: 20px;
+      margin: 10px auto;
+      display: block;
+    }
+  </style>
+
+  <!-- VUE / ROUTER / AXIOS -->
+  <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue-router@3/dist/vue-router.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+<div id="app">
+  <h1 style="color:#d35400;">Cocktail Explorer</h1>
+  <router-view></router-view>
+</div>
+
+<script>
+/* ======================================================
+   EJERCICIO 1: FUNCIÓN REUTILIZABLE PARA LA API
+   ====================================================== */
+async function obtenerCocktailsPorCategoria(categoria) {
+  try {
+    const response = await axios.get(
+      `https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=${categoria}`
+    );
+    return response.data.drinks || [];
+  } catch (error) {
+    console.error("Error al cargar cócteles:", error);
+    return [];
+  }
+}
+
+/* ======================================================
+   EJERCICIO 2: VISTA PRINCIPAL (HOME)
+   ====================================================== */
+const Home = {
+  template: `
+    <div>
+      <h2>10 Cócteles del Día</h2>
+
+      <button @click="cargarDiez" class="btn">Cargar otros 10</button>
+
+      <div v-if="loading" style="text-align:center; font-style:italic;">Cargando cócteles...</div>
+
+      <div v-else class="grid">
+        <div v-for="drink in drinks" :key="drink.idDrink" class="card">
+          <router-link :to="'/detalle/' + drink.idDrink">
+            <img :src="drink.strDrinkThumb" :alt="drink.strDrink">
+            <h3>{{ drink.strDrink }}</h3>
+          </router-link>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin:20px;">
+        <router-link to="/buscar" style="color:#d35400; font-weight:bold;">Buscar por nombre</router-link>
+      </div>
+    </div>
+  `,
+  data() {
+    return {
+      drinks: [],
+      loading: true
+    };
+  },
+  methods: {
+    async cargarDiez() {
+      this.loading = true;
+      const todos = await obtenerCocktailsPorCategoria("Ordinary_Drink");
+      this.drinks = todos.slice(0, 10);
+      this.loading = false;
+    }
+  },
+  mounted() {
+    this.cargarDiez();
+  }
+};
+
+/* ======================================================
+   EJERCICIO 3: VISTA DETALLE
+   ====================================================== */
+const Detalle = {
+  template: `
+    <div v-if="cocktail" style="max-width:500px; margin:20px auto; text-align:center;">
+      <h2 style="color:#d35400;">{{ cocktail.strDrink }}</h2>
+
+      <img :src="cocktail.strDrinkThumb" style="width:300px; border-radius:15px;">
+
+      <p><strong>Categoría:</strong> {{ cocktail.strCategory }}</p>
+      <p><strong>Alcohol:</strong> {{ cocktail.strAlcoholic }}</p>
+      <p><strong>Receta:</strong> {{ cocktail.strInstructions }}</p>
+
+      <h4>Ingredientes:</h4>
+      <ol style="text-align:left; max-width:300px; margin:0 auto;">
+        <li v-for="i in 15" v-if="cocktail['strIngredient' + i]">
+          {{ cocktail['strIngredient' + i] }}
+          <span v-if="cocktail['strMeasure' + i]"> - {{ cocktail['strMeasure' + i] }}</span>
+          <span v-else> - al gusto</span>
+        </li>
+      </ol>
+
+      <div style="margin-top:20px;">
+        <router-link to="/" style="color:#d35400;">Volver al Inicio</router-link> |
+        <router-link to="/buscar" style="color:#d35400;">Buscar otro</router-link>
+      </div>
+    </div>
+
+    <div v-else style="text-align:center; margin-top:20px;">
+      Cargando detalle...
+    </div>
+  `,
+  data() {
+    return {
+      cocktail: null
+    };
+  },
+  async mounted() {
+    try {
+      const id = this.$route.params.id;
+      const res = await axios.get(
+        `https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`
+      );
+      this.cocktail = res.data.drinks[0];
+    } catch (error) {
+      console.error("Error cargando detalle:", error);
+    }
+  }
+};
+
+/* ======================================================
+   EJERCICIO 3: VISTA BUSCAR
+   ====================================================== */
+const Buscar = {
+  template: `
+    <div>
+      <h2>Buscar Cóctel</h2>
+
+      <input v-model="nombre" @keyup.enter="buscar" placeholder="Ej: Margarita" />
+
+      <button @click="buscar" class="btn">Buscar</button>
+
+      <div v-if="loading" style="text-align:center; font-style:italic;">Cargando búsqueda...</div>
+
+      <div v-else-if="resultados === null" style="text-align:center; margin-top:20px;">
+        Ingresa un nombre para buscar.
+      </div>
+
+      <div v-else-if="resultados.length === 0" style="text-align:center; margin-top:20px;">
+        No se encontraron cócteles con ese nombre.
+      </div>
+
+      <div v-else class="grid">
+        <div v-for="drink in resultados" :key="drink.idDrink" class="card" style="width:160px;">
+          <router-link :to="'/detalle/' + drink.idDrink">
+            <img :src="drink.strDrinkThumb">
+            <h4>{{ drink.strDrink }}</h4>
+          </router-link>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin:20px;">
+        <router-link to="/" style="color:#d35400;">Volver al Inicio</router-link>
+      </div>
+    </div>
+  `,
+  data() {
+    return {
+      nombre: "",
+      resultados: null,
+      loading: false
+    };
+  },
+  methods: {
+    async buscar() {
+      if (!this.nombre.trim()) return;
+      this.loading = true;
+
+      try {
+        const res = await axios.get(
+          `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${this.nombre}`
+        );
+        this.resultados = res.data.drinks || [];
+      } catch (error) {
+        console.error("Error en búsqueda:", error);
+        this.resultados = [];
+      }
+
+      this.loading = false;
+    }
+  }
+};
+
+/* ======================================================
+   ROUTER
+   ====================================================== */
+const routes = [
+  { path: "/", component: Home },
+  { path: "/detalle/:id", component: Detalle },
+  { path: "/buscar", component: Buscar }
+];
+
+const router = new VueRouter({ routes });
+
+/* ======================================================
+   VUE ROOT
+   ====================================================== */
+new Vue({
+  el: "#app",
+  router
+});
+</script>
+
+</body>
+</html>
