@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buscador Asincrónico – Países</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#f1f1f1;
+      padding:20px;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .buscador{
+      max-width:500px;
+      margin:0 auto;
+      text-align:center;
+    }
+
+    #input{
+      width:100%;
+      padding:10px;
+      font-size:16px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      margin-bottom:20px;
+    }
+
+    #estado{
+      font-style:italic;
+      color:#666;
+      text-align:center;
+      margin-bottom:10px;
+    }
+
+    #lista{
+      max-width:800px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+      gap:20px;
+    }
+
+    .card{
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      box-shadow:0 0 10px rgba(0,0,0,.1);
+    }
+
+    .card img{
+      width:100%;
+      height:140px;
+      object-fit:cover;
+      border-radius:10px;
+      margin-bottom:10px;
+    }
+
+    .nombre{
+      font-size:18px;
+      font-weight:bold;
+      margin-bottom:5px;
+    }
+
+    .region{
+      font-size:14px;
+      color:#777;
+    }
+
+    .error{
+      text-align:center;
+      color:#b00020;
+      margin-top:10px;
+      font-size:15px;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Buscador Asincrónico de Países</h1>
+
+  <div class="buscador">
+    <input id="input" placeholder="Escribí un país..." />
+    <div id="estado"></div>
+  </div>
+
+  <p id="error" class="error"></p>
+
+  <div id="lista"></div>
+
+<script>
+  const API = "https://restcountries.com/v3.1/name/";
+
+  const input = document.getElementById("input");
+  const estado = document.getElementById("estado");
+  const lista = document.getElementById("lista");
+  const errorEl = document.getElementById("error");
+
+  let timer = null;
+
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+
+    const q = input.value.trim();
+
+    if(q.length === 0){
+      lista.innerHTML = "";
+      estado.textContent = "";
+      errorEl.style.display = "none";
+      return;
+    }
+
+    estado.textContent = "Buscando...";
+    errorEl.style.display = "none";
+
+    timer = setTimeout(() => buscar(q), 500); // delay de 500ms para evitar spam
+  });
+
+  async function buscar(q){
+    try{
+      const r = await axios.get(API + q, {timeout:5000});
+      const paises = r.data;
+
+      lista.innerHTML = "";
+      estado.textContent = `Se encontraron ${paises.length} resultado(s)`;
+
+
+      paises.forEach(p => {
+        const card = document.createElement("div");
+        card.classList.add("card");
+
+        const bandera = p.flags?.png || "";
+        const nombre  = p.name?.common || "Sin nombre";
+        const region  = p.region || "N/A";
+
+        card.innerHTML = `
+          <img src="${bandera}" alt="Bandera">
+          <div class="nombre">${nombre}</div>
+          <div class="region">${region}</div>
+        `;
+
+        lista.appendChild(card);
+      });
+
+    }catch(e){
+      lista.innerHTML = "";
+      estado.textContent = "";
+      errorEl.textContent = "No se encontraron países.";
+      errorEl.style.display = "block";
+    }
+  }
+</script>
+
+</body>
+</html>

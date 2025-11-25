@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cotizaciones del Dólar – Asincronismo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#f5f5f5;
+      padding:25px;
+      color:#222;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    #estado{
+      text-align:center;
+      font-style:italic;
+      margin-bottom:15px;
+      color:#444;
+    }
+
+    .contenedor{
+      max-width:750px;
+      margin:0 auto;
+      background:#fff;
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 0 12px rgba(0,0,0,0.1);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+    }
+
+    th, td{
+      border:1px solid #ddd;
+      padding:10px;
+      font-size:15px;
+    }
+
+    th{
+      background:#e8e8e8;
+      text-transform:uppercase;
+      font-size:13px;
+    }
+
+    .error{
+      text-align:center;
+      color:#b00020;
+      font-weight:bold;
+      margin-top:12px;
+    }
+
+    button{
+      padding:10px 16px;
+      background:#2962ff;
+      color:white;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-size:14px;
+      margin:10px auto;
+      display:block;
+    }
+
+    button:hover{
+      background:#0039cb;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Cotizaciones del Dólar (API Pública)</h1>
+
+  <div id="estado">Cargando cotizaciones...</div>
+
+  <div class="contenedor">
+
+    <table id="tabla" style="display:none;">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Compra</th>
+          <th>Venta</th>
+          <th>Fuente</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <!-- filas generadas con JS -->
+      </tbody>
+    </table>
+
+    <p id="error" class="error" style="display:none;"></p>
+
+    <button id="actualizar">Actualizar</button>
+  </div>
+
+
+<script>
+  const API_URL = "https://dolarapi.com/v1/dolares";
+  const estadoEl = document.getElementById("estado");
+  const errorEl = document.getElementById("error");
+  const tabla = document.getElementById("tabla");
+  const tbody = document.getElementById("tbody");
+
+  async function cargarDolares(){
+    try{
+      estadoEl.textContent = "Cargando cotizaciones...";
+      errorEl.style.display = "none";
+      tabla.style.display = "none";
+      tbody.innerHTML = "";
+
+      const r = await axios.get(API_URL, {timeout:6000});
+      const datos = r.data;
+
+      if(!Array.isArray(datos)){
+        throw new Error("Respuesta inválida.");
+      }
+
+      datos.forEach(item => {
+        const tr = document.createElement("tr");
+
+        const tdTipo   = document.createElement("td");
+        const tdCompra = document.createElement("td");
+        const tdVenta  = document.createElement("td");
+        const tdFuente = document.createElement("td");
+
+        tdTipo.textContent   = item.nombre;
+        tdCompra.textContent = item.compra ? "$ " + item.compra : "-";
+        tdVenta.textContent  = item.venta  ? "$ " + item.venta  : "-";
+        tdFuente.textContent = item.casa;
+
+        tr.appendChild(tdTipo);
+        tr.appendChild(tdCompra);
+        tr.appendChild(tdVenta);
+        tr.appendChild(tdFuente);
+        tbody.appendChild(tr);
+      });
+
+      tabla.style.display = "table";
+      estadoEl.textContent = `Última actualización: ${new Date().toLocaleTimeString()}`;
+
+    }catch(err){
+      console.error("Error cargando dólar:", err);
+      errorEl.textContent = "No se pudo obtener la información.";
+      errorEl.style.display = "block";
+      estadoEl.textContent = "";
+    }
+  }
+
+  document.getElementById("actualizar").addEventListener("click", cargarDolares);
+
+  cargarDolares();
+</script>
+
+</body>
+</html>

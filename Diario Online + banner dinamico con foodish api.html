@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Diario Online - Edición Digital</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- AXIOS -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: Arial, sans-serif;
+      background:#f4f4f4;
+      color:#222;
+    }
+
+    header{
+      background:#111;
+      color:#fff;
+      padding:15px 20px;
+      margin-bottom:5px;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .logo{
+      font-size:24px;
+      font-weight:bold;
+      text-transform:uppercase;
+    }
+
+    .fecha{
+      font-size:13px;
+      opacity:.8;
+    }
+
+    nav ul{
+      list-style:none;
+      display:flex;
+      gap:18px;
+      margin-top:8px;
+    }
+
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      font-weight:bold;
+      text-transform:uppercase;
+      font-size:14px;
+    }
+
+    nav a:hover{ text-decoration:underline }
+
+    main{
+      display:flex;
+      gap:20px;
+      padding:20px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    /* COLUMNA PRINCIPAL */
+    .col-principal{flex:3;display:flex;flex-direction:column;gap:22px;}
+
+    .nota-principal{
+      background:#fff;padding:18px;border-radius:6px;
+      box-shadow:0 0 5px rgba(0,0,0,.15);
+    }
+
+    .nota-principal h2{font-size:24px;margin:6px 0}
+
+    .volanta{color:#c00;text-transform:uppercase;font-size:12px;font-weight:bold}
+
+    .copete{font-size:16px;margin-bottom:10px;font-weight:bold}
+
+    p{font-size:14px;line-height:1.5;margin-bottom:6px}
+
+    .listado-notas{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+      gap:16px;
+    }
+
+    .nota-secundaria{
+      background:#fff;padding:13px;border-radius:6px;
+      box-shadow:0 0 4px rgba(0,0,0,.15);
+    }
+
+    .nota-secundaria h3{font-size:17px;margin-bottom:4px}
+
+    /* SIDEBAR */
+    .col-sidebar{flex:1.4;display:flex;flex-direction:column;gap:20px;}
+
+    .widget{
+      background:#fff;padding:12px;border-radius:6px;
+      box-shadow:0 0 4px rgba(0,0,0,.1);
+    }
+
+    .widget h4{
+      text-transform:uppercase;
+      margin-bottom:6px;
+      border-bottom:1px solid #ddd;
+      padding-bottom:5px;
+    }
+
+    #banner-comida img{
+      width:100%;
+      border-radius:6px;
+      margin-top:8px;
+      cursor:pointer;
+    }
+
+    .marca{
+      font-size:11px;
+      color:#666;
+      margin-top:4px;
+      text-align:center;
+    }
+
+    @media(max-width:900px){
+      main{flex-direction:column;}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="top">
+    <div class="logo">Diario Online</div>
+    <div class="fecha">Martes 25 de Noviembre de 2025</div>
+  </div>
+
+  <nav>
+    <ul>
+      <li><a href="#">Política</a></li>
+      <li><a href="#">Economía</a></li>
+      <li><a href="#">Deportes</a></li>
+      <li><a href="#">Mundo</a></li>
+      <li><a href="#">Tecnología</a></li>
+      <li><a href="#">Cultura</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <!-- COLUMNA PRINCIPAL -->
+  <section class="col-principal">
+
+    <article class="nota-principal">
+      <div class="volanta">Economía</div>
+      <h2>El dólar vuelve a tensionar al mercado local</h2>
+      <p class="copete">Los analistas coinciden en que la volatilidad continuará en las próximas semanas.</p>
+      <p>El sector financiero está a la expectativa de los anuncios del Banco Central y la evolución del tipo de cambio en la plaza local. Las operaciones del día mostraron fuertes oscilaciones en acciones y bonos.</p>
+      <p>Mientras tanto, el sector privado monitorea las negociaciones internacionales y el impacto de la política monetaria en la actividad económica.</p>
+    </article>
+
+    <div>
+      <h4 style="margin-bottom:10px;color:#333;">Más Noticias</h4>
+      <div class="listado-notas">
+        <div class="nota-secundaria">
+          <h3>Récord de turistas en el fin de semana largo</h3>
+          <p>Los destinos más visitados alcanzaron ocupación superior al 90%.</p>
+        </div>
+
+        <div class="nota-secundaria">
+          <h3>Lanzan becas gratuitas en programación</h3>
+          <p>El sector tech busca acelerar la capacitación de nuevos talentos.</p>
+        </div>
+
+        <div class="nota-secundaria">
+          <h3>Importante triunfo en la liga local</h3>
+          <p>El equipo del sur festejó tras una remontada histórica.</p>
+        </div>
+
+        <div class="nota-secundaria">
+          <h3>Medidas energéticas para el verano</h3>
+          <p>Buscan reducir el consumo y aliviar la red en horas pico.</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- SIDEBAR -->
+  <aside class="col-sidebar">
+
+    <div class="widget">
+      <h4>Clima</h4>
+      <p>Buenos Aires</p>
+      <p>26°C · Parcialmente nublado</p>
+      <p>Humedad: 55%</p>
+    </div>
+
+    <!-- BANNER DINÁMICO FUNCIONANDO  -->
+    <div class="widget" id="banner-comida">
+      <h4>Publicidad</h4>
+      <p>Pedí tu comida online</p>
+
+      <a href="https://www.pedidosya.com.ar" target="_blank">
+        <img id="banner-img" src="" alt="Banner Comida">
+      </a>
+
+      <div class="marca">Imágenes provistas por Foodish API</div>
+    </div>
+
+    <div class="widget">
+      <h4>Suscribite</h4>
+      <p>Recibí las noticias más importantes del día en tu email.</p>
+    </div>
+
+  </aside>
+</main>
+
+<script>
+  const API = "https://foodish-api.herokuapp.com/api/";
+  const banner = document.getElementById("banner-img");
+
+  async function cargarBanner(){
+    try{
+      const r = await axios.get(API, {timeout:5000});
+      const img = r.data?.image;
+
+      if(img){
+        banner.src = img;
+      } else {
+        banner.src = "https://via.placeholder.com/300x200?text=Publicidad";
+      }
+
+    }catch(e){
+      console.error("Error cargando banner:", e);
+      banner.src = "https://via.placeholder.com/300x200?text=Publicidad";
+    }
+  }
+
+  // Primera carga
+  cargarBanner();
+
+  // Cada 10 segundos, cambia
+  setInterval(cargarBanner, 10000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Blog de Astronomía - NASA Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:#f5f5f5;
+      background:#020817; /* color base antes de que llegue APOD */
+      min-height:100vh;
+    }
+
+    /* Al cargar APOD usamos la imagen como fondo */
+    body.apod-loaded{
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
+    }
+
+    .overlay{
+      background:rgba(0,0,0,0.65);
+      min-height:100vh;
+    }
+
+    header{
+      padding:18px 24px;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .logo{
+      font-size:24px;
+      font-weight:700;
+      letter-spacing:1px;
+      text-transform:uppercase;
+    }
+
+    .tagline{
+      font-size:13px;
+      opacity:0.8;
+    }
+
+    nav{
+      margin-top:10px;
+    }
+
+    nav ul{
+      list-style:none;
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    nav a{
+      color:#e5e7eb;
+      text-decoration:none;
+      font-size:14px;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+
+    nav a:hover{
+      text-decoration:underline;
+    }
+
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px;
+      display:flex;
+      gap:20px;
+      flex-wrap:wrap;
+    }
+
+    .col-principal{
+      flex:3;
+      min-width:280px;
+    }
+
+    .col-sidebar{
+      flex:1.2;
+      min-width:240px;
+    }
+
+    .card{
+      background:rgba(15,23,42,0.9);
+      border-radius:12px;
+      padding:18px 16px;
+      box-shadow:0 0 18px rgba(0,0,0,0.4);
+      margin-bottom:20px;
+    }
+
+    .card h2, .card h3{
+      margin-bottom:8px;
+    }
+
+    .card p{
+      font-size:14px;
+      line-height:1.6;
+      margin-bottom:6px;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.04em;
+      background:rgba(59,130,246,0.2);
+      color:#bfdbfe;
+      margin-bottom:6px;
+    }
+
+    .apod-image{
+      width:100%;
+      border-radius:10px;
+      margin-top:10px;
+    }
+
+    .apod-meta{
+      font-size:12px;
+      opacity:0.8;
+      margin-top:4px;
+    }
+
+    .lista-articulos{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:16px;
+    }
+
+    .articulo-mini h3{
+      font-size:15px;
+      margin-bottom:4px;
+    }
+
+    .articulo-mini p{
+      font-size:13px;
+    }
+
+    .widget h3{
+      font-size:16px;
+      margin-bottom:8px;
+    }
+
+    .error-msg{
+      font-size:13px;
+      color:#fecaca;
+      margin-top:8px;
+    }
+
+    .hidden{
+      display:none;
+    }
+
+    @media (max-width:900px){
+      main{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+<div class="overlay">
+  <header>
+    <div class="topbar">
+      <div class="logo">NASA Explorer</div>
+      <div class="tagline">Blog de astronomía para estudiantes curiosos</div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#" data-section="inicio">Inicio</a></li>
+        <li><a href="#" data-section="sistema">Sistema Solar</a></li>
+        <li><a href="#" data-section="estrellas">Estrellas</a></li>
+        <li><a href="#" data-section="galaxias">Galaxias</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- COLUMNA PRINCIPAL -->
+    <section class="col-principal">
+
+      <!-- Página INICIO (APOD del día + noticias) -->
+      <section id="page-inicio">
+        <article class="card" id="apod-hero">
+          <span class="badge">Astronomy Picture of the Day</span>
+          <h2 id="apod-title">Cargando imagen del día...</h2>
+          <p id="apod-copete"></p>
+          <img id="apod-img" class="apod-image" alt="Imagen astronómica del día">
+          <p class="apod-meta" id="apod-meta"></p>
+          <p id="apod-explanation"></p>
+          <p class="error-msg" id="apod-error" style="display:none;"></p>
+        </article>
+
+        <section class="card">
+          <span class="badge">Noticias del espacio</span>
+          <h3>Más imágenes recomendadas por la NASA</h3>
+          <div id="apod-list" class="lista-articulos">
+            <!-- JS llena esto -->
+          </div>
+        </section>
+      </section>
+
+      <!-- Página SISTEMA SOLAR (asincrónica) -->
+      <section id="page-sistema" class="hidden">
+        <article class="card">
+          <span class="badge">Sistema Solar</span>
+          <h2>Explorá los planetas</h2>
+          <p>
+            Selección de imágenes astronómicas vinculadas al entorno del Sol, planetas y objetos cercanos.
+            El contenido se carga asincrónicamente desde la API de la NASA.
+          </p>
+          <div id="sistema-contenido" class="lista-articulos">
+            <!-- se llena vía JS -->
+          </div>
+        </article>
+      </section>
+
+      <!-- Página ESTRELLAS (asincrónica) -->
+      <section id="page-estrellas" class="hidden">
+        <article class="card">
+          <span class="badge">Estrellas</span>
+          <h2>Historias de estrellas</h2>
+          <p>
+            Galería de imágenes de estrellas, nebulosas y cúmulos estelares. El material se obtiene
+            asincrónicamente desde APOD.
+          </p>
+          <div id="estrellas-contenido" class="lista-articulos">
+            <!-- JS -->
+          </div>
+        </article>
+      </section>
+
+      <!-- Página GALAXIAS (asincrónica) -->
+      <section id="page-galaxias" class="hidden">
+        <article class="card">
+          <span class="badge">Galaxias</span>
+          <h2>Viajando entre galaxias</h2>
+          <p>
+            Un vistazo a diferentes galaxias, brasas cósmicas y estructuras lejanas. El contenido se
+            carga de forma asincrónica al ingresar a esta sección.
+          </p>
+          <div id="galaxias-contenido" class="lista-articulos">
+            <!-- JS -->
+          </div>
+        </article>
+      </section>
+
+    </section>
+
+    <!-- SIDEBAR -->
+    <aside class="col-sidebar">
+      <section class="card widget">
+        <h3>¿Qué es APOD?</h3>
+        <p>
+          APOD (Astronomy Picture of the Day) es un servicio de la NASA que selecciona diariamente
+          una fotografía o ilustración astronómica acompañada de una explicación escrita por astrónomos
+          profesionales.
+        </p>
+      </section>
+
+      <section class="card widget">
+        <h3>Recursos para el aula</h3>
+        <ul style="font-size:13px;line-height:1.6;margin-left:16px;">
+          <li>Investigá la constelación visible en la imagen del día.</li>
+          <li>Ubicá en un mapa celeste el objeto astronómico destacado.</li>
+          <li>Compará imágenes de diferentes días y clasificá los tipos de objetos.</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<script>
+  // ========= CONFIGURACIÓN NASA APOD =========
+  const APOD_ENDPOINT = "https://api.nasa.gov/planetary/apod";
+  const API_KEY = "DEMO_KEY"; // clave pública demo
+
+  const body        = document.body;
+  const titleEl     = document.getElementById("apod-title");
+  const copeteEl    = document.getElementById("apod-copete");
+  const imgEl       = document.getElementById("apod-img");
+  const metaEl      = document.getElementById("apod-meta");
+  const explEl      = document.getElementById("apod-explanation");
+  const errorEl     = document.getElementById("apod-error");
+  const listaEl     = document.getElementById("apod-list");
+
+  const pageInicio   = document.getElementById("page-inicio");
+  const pageSistema  = document.getElementById("page-sistema");
+  const pageEstrellas= document.getElementById("page-estrellas");
+  const pageGalaxias = document.getElementById("page-galaxias");
+
+  let sistemaCargado   = false;
+  let estrellasCargadas= false;
+  let galaxiasCargadas = false;
+
+  // ========= FUNCIÓN REUTILIZABLE APOD =========
+  async function obtenerApod(count = 1){
+    try{
+      const url = `${APOD_ENDPOINT}?api_key=${API_KEY}&count=${count}`;
+      const resp = await axios.get(url);
+      const data = resp.data;
+      if(Array.isArray(data)){
+        return data;
+      }else{
+        return [data];
+      }
+    }catch(err){
+      console.error("Error al consultar APOD:", err);
+      return [];
+    }
+  }
+
+  // ========= PÁGINA INICIO =========
+  async function cargarApodPrincipal(){
+    const resultados = await obtenerApod(1);
+
+    if(resultados.length === 0){
+      errorEl.style.display = "block";
+      errorEl.textContent = "No se pudo cargar la imagen del día. Probá más tarde.";
+      titleEl.textContent = "Imagen no disponible";
+      return;
+    }
+
+    const apod = resultados[0];
+
+    titleEl.textContent = apod.title || "Astronomy Picture of the Day";
+    copeteEl.textContent = apod.media_type === "video"
+      ? "La NASA seleccionó un video para la imagen astronómica del día."
+      : "La NASA seleccionó esta fotografía como imagen astronómica del día.";
+    imgEl.src = apod.url;
+    imgEl.alt = apod.title || "Imagen astronómica del día";
+
+    metaEl.textContent = `Fecha: ${apod.date} · Fuente: NASA / APOD`;
+    explEl.textContent = apod.explanation || "";
+
+    if(apod.media_type === "image"){
+      body.classList.add("apod-loaded");
+      body.style.backgroundImage = `url(${apod.url})`;
+    }
+  }
+
+  async function cargarApodListado(){
+    const resultados = await obtenerApod(3);
+
+    if(resultados.length === 0){
+      listaEl.innerHTML = "<p class='error-msg'>No se pudieron cargar más imágenes desde la NASA.</p>";
+      return;
+    }
+
+    listaEl.innerHTML = "";
+
+    resultados.forEach(item => {
+      const article = document.createElement("article");
+      article.className = "articulo-mini";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = item.title;
+
+      const p = document.createElement("p");
+      p.textContent = item.explanation
+        ? item.explanation.slice(0,130) + "..."
+        : "Imagen astronómica seleccionada por la NASA.";
+
+      article.appendChild(h3);
+      article.appendChild(p);
+      listaEl.appendChild(article);
+    });
+  }
+
+  // ========= SECCIONES ASINCRÓNICAS =========
+  async function cargarSeccionGenerica(contenedorId, descripcion){
+    const cont = document.getElementById(contenedorId);
+    cont.innerHTML = "<p>Cargando contenido desde la NASA...</p>";
+
+    const resultados = await obtenerApod(3);
+
+    if(resultados.length === 0){
+      cont.innerHTML = "<p class='error-msg'>No se pudo cargar contenido para esta sección.</p>";
+      return;
+    }
+
+    cont.innerHTML = "";
+    resultados.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "articulo-mini";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = item.title;
+
+      const p = document.createElement("p");
+      const texto = item.explanation || descripcion;
+      p.textContent = texto.slice(0,130) + "...";
+
+      card.appendChild(h3);
+      card.appendChild(p);
+      cont.appendChild(card);
+    });
+  }
+
+  async function mostrarPagina(nombre){
+    // ocultar todas
+    pageInicio.classList.add("hidden");
+    pageSistema.classList.add("hidden");
+    pageEstrellas.classList.add("hidden");
+    pageGalaxias.classList.add("hidden");
+
+    if(nombre === "inicio"){
+      pageInicio.classList.remove("hidden");
+    } else if(nombre === "sistema"){
+      pageSistema.classList.remove("hidden");
+      if(!sistemaCargado){
+        await cargarSeccionGenerica("sistema-contenido",
+          "Contenido relacionado con el Sistema Solar.");
+        sistemaCargado = true;
+      }
+    } else if(nombre === "estrellas"){
+      pageEstrellas.classList.remove("hidden");
+      if(!estrellasCargadas){
+        await cargarSeccionGenerica("estrellas-contenido",
+          "Contenido relacionado con estrellas y nebulosas.");
+        estrellasCargadas = true;
+      }
+    } else if(nombre === "galaxias"){
+      pageGalaxias.classList.remove("hidden");
+      if(!galaxiasCargadas){
+        await cargarSeccionGenerica("galaxias-contenido",
+          "Contenido relacionado con galaxias lejanas.");
+        galaxiasCargadas = true;
+      }
+    }
+  }
+
+  // ========= MENÚ (NAVEGACIÓN ASINCRÓNICA) =========
+  function configurarMenu(){
+    const links = document.querySelectorAll("[data-section]");
+    links.forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const seccion = link.getAttribute("data-section");
+        mostrarPagina(seccion);
+      });
+    });
+  }
+
+  // ========= INICIALIZACIÓN =========
+  configurarMenu();
+  mostrarPagina("inicio");
+  cargarApodPrincipal();
+  cargarApodListado();
+</script>
+</body>
+</html>
