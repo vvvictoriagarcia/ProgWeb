@@ -1,0 +1,46 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+}
+#app {
+    max-width: 700px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 16px;
+}
+header {
+    margin-bottom: 16px;
+}
+h1 {
+    color: #2b6cb0;
+    font-size: 1.5rem;
+}
+.error {
+    color: #b91c1c;
+    margin-bottom: 8px;
+}
+table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 6px;
+    border-bottom: 1px solid #eee;
+}
+input[type="text"] {
+    padding: 5px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+button {
+    background: #2b6cb0;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.user-detail-view {
+    margin-top: 12px;
+}
